@@ -1,0 +1,49 @@
+---
+title: "salinityRA_EDA"
+author: "Kristin Chang"
+date: '2022-06-07'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+library(tidyverse)
+library(sf)
+library(ggplot2)
+library(mapview)
+library(RColorBrewer)
+```
+
+```{r PANGEA data}
+pangea <- st_read("data/nationalData/PANGEA/GroundwaterDB_USA.csv")%>%
+  as.data.frame()%>%
+  drop_na()%>%
+  st_as_sf(coords=c("Lon","Lat"), crs=4326, agr="constant")%>%
+  st_transform(4326)
+```
+```{r US geom}
+bounds <- st_read("data/cb_2018_us_state_20m/cb_2018_us_state_20m.shp")%>%
+  st_as_sf()%>%
+  st_transform(4326)
+
+states <- c("Alabama", "Delaware", "Florida", "Georgia", "Louisiana", "Maryland", "Mississippi", "New Jersey", "North Carolina", "Pennsylvania", "South Carolina", "Texas", "Virginia")
+
+studyArea <- filter(bounds, NAME %in% states)
+
+pangeaEC <- st_join(pangea, studyArea, join=st_intersects, left=FALSE)
+
+```
+
+```{r mapview}
+mapview(pangeaEC, 
+        zcol="EC",
+        col.regions=viridisLite::viridis,
+        color = viridisLite::viridis, 
+        cex = 2,
+        popup=FALSE, 
+        layer.name = "Electrical Conductivity")
+```
+
